@@ -11,3 +11,4 @@ Salv csv  -  Ctrl-S
 Kopeeri kõik - Ctrl-Alt-C  
 See abi - F1  
 Välju -  Ctrl-Q  
+<img src='https://raw.githubusercontent.com/ukj/FacebookArchiveMsgBrowser_json_/master/Screenshot_20210213-012954_Pydroid%203.jpg' />
