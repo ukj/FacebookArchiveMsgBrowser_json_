@@ -8,12 +8,14 @@ Facebook Sõnumite JSON arhiiv zip
 
 ## Mis pooleli ja mis edasi
 - Klahvid ei pruugi toimida
-- Youtube vahemälu vaikimisi asukoht peaks olema zip failiga samas kataloogis.
+- Youtube vahemälu vaikimisi asukoht peaks olema zip failiga samas kataloogis ja sarnase ja sama nimega
 - - asukoht võiks olla määratav
 - Filtrite valik, mõni põhi filter võib olla peamises  klassis, aga rohkemate lisamine vajab alamklsse/plugina liidest
 - Tel numbrite ja meiliaadresside leidja
+- - Nimed võivad sõnumites olla väikese algustähega ja raskemini leitavad, kuid sõnumikastidest vestluste osapoolte nimede kasutamised võiks leida. 
 - Klikitav tabel, manuste lahtipakkija
 - Seadete aken
+- exe failiks
 
 Ava zip  - Ctrl-O  
 Salv csv  -  Ctrl-S  
