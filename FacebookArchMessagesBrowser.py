@@ -86,6 +86,7 @@ class App(tk.Tk):
     appButtons = {}
     csw = 700
     csh = 700
+    frame=None
     
     def __init__(self):
         '''Peaaknaga alustamine
@@ -97,13 +98,17 @@ class App(tk.Tk):
         '''
         super().__init__()
         
-        self.scw = self.sch = 700        
+        self.scw = self.sch = 700
+        self.frame = Frame(self, height = self.scw, width = self.sch)
+        self.frame.pack()
+                
         self.title("Facebooki Sõnumite Arhiiv")
         self.resizable(True, True) #Mis suunal suurus muudetav X Y
         self.update()
         
-        S = tk.Scrollbar(self)         
-        self.T = tk.Text(self, height=50, width=80)
+        
+        S = tk.Scrollbar(self.frame)
+        self.T = tk.Text(self.frame, height=50, width=80)
         #courier14 = tkFont.Font(family="Courier",size=14,weight="bold")
         #self.T.insert(tk.END, font.nametofont("TkFixedFont").actual())
         #self.T.insert(tk.END, "\n".join(result))
@@ -111,7 +116,7 @@ class App(tk.Tk):
         S .config(command=self.T.yview)
         self.T.config(yscrollcommand=S.set, state=tk.NORMAL)
         
-        group_1 = tk.LabelFrame(self, padx=15, pady=10, text="Toimingud")
+        group_1 = tk.LabelFrame(self.frame, padx=15, pady=10, text="Toimingud")
                 
         self.listbox_Box = tk.Listbox(group_1,height=3, selectmode='browse', selectbackground='blue',highlightcolor='yellow',highlightthickness=1) 
         listboxScroll_Box = Scrollbar(group_1)
@@ -137,7 +142,7 @@ class App(tk.Tk):
         self.listbox_Thread.pack(side=tk.LEFT)
         listboxScroll_Thread.pack(side = tk.LEFT, fill = tk.BOTH)
         self.create_AppButton(group_1,'helpWin','[ ? ]',self.key_helpWindow, text_tooltip='Salvesta filtreering tekstina', controlkey='<F1>')
-        self.create_AppButton(group_1,'exitApp','[ X ]', self.key_exit, text_tooltip='Lõpeta', controlkey='<Control-q>')
+        self.create_AppButton(group_1,'exitApp','[ X ]', self.key_exit, text_tooltip='Lõpeta', controlkey='<Control-Q>')
         group_1.pack()
 
         self.T.pack(expand=tk.YES, side=tk.LEFT, fill=tk.BOTH)
@@ -147,6 +152,7 @@ class App(tk.Tk):
         
         self.scw = self.winfo_width()
         self.sch = self.winfo_height()
+        self.frame.config(width=self.scw, height=self.sch)
         self.geometry(f"{self.scw}x{self.sch}")
         self.update()
         #self.mainloop()
@@ -186,10 +192,11 @@ class App(tk.Tk):
             thirdparty.CreateToolTip.CreateToolTip(self, b, text_tooltip)
         
         if controlkey != '':
-            b.bind(controlkey, cmd)
-        
+            self.frame.bind(controlkey, cmd)
+            #print(f"abc {controlkey} {cmd}")
         b.pack(side=tk.LEFT)
         self.appButtons[name] = b
+        self.update()
 
 
 
