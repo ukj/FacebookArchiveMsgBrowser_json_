@@ -32,6 +32,13 @@ class AppHelpWindow(tk.Toplevel):
     
     * https://www.geeksforgeeks.org/open-a-new-window-with-a-button-in-python-tkinter/
     * https://www.askpython.com/python/examples/find-all-methods-of-class
+    
+Ava zip\t\tCtrl-O
+Salv csv\t\tCtrl-S
+Kopeeri kõik\tCtrl-Alt-C
+See abi\t\tF1
+Välju\t\tCtrl-Q
+
     '''      
     def __init__(self, parent): 
         super().__init__(parent)
@@ -44,12 +51,6 @@ class AppHelpWindow(tk.Toplevel):
 * Filtreeritud teksti saab kopeerida lõikelauale või salvestada CSV
 * Näitab manuste failiteesid ja tekstis leiduvaid linke
 * Lisab Youtube JSON API-t kasutades video linkidele pealkirjad ja salvestab need SQLite abil.
-
-Ava zip\t\tCtrl-O
-Salv csv\t\tCtrl-S
-Kopeeri kõik\tCtrl-Alt-C
-See abi\t\tF1
-Välju\t\tCtrl-Q
 
 
 \tukj@ukj.ee, 2021.02"""
