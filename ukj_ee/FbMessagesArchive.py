@@ -83,8 +83,10 @@ class FbMessagesArchive:
         
         if zipfile.is_zipfile(FbArchiveZip):
             #myLogger('set_ZipFp()', f"{FbArchiveZip}")
-            self.Zip_f  = FbArchiveZip
-            return True
+            for f in ZipFile(FbArchiveZip, 'r').namelist():
+                if f.startswith('messages/inbox/'):
+                    self.Zip_f  = FbArchiveZip
+                    return True
         return False
     
 
@@ -258,7 +260,7 @@ class FbMessagesArchive:
                 Sonum = self.Conversation[i][2]
                 #Manused = self.Conversation[i][3]
                 
-                result.append("%s;%s;\"%s\";;;" % (Saatja, Aeg, Sonum ))
+                result.append("\n\n%s;%s;\"%s\";;;" % (Saatja, Aeg, Sonum ))
                 
                 at=attype=yt_short=yt_title=yt_meta=''
                 for at in self.Conversation[i][3]:
@@ -279,3 +281,10 @@ class FbMessagesArchive:
                             else:
                                 result.append(";;;%s;%s;\"\"" % (attype, at[attype]))
         return result    
+
+
+
+
+
+#for method in [method for method in dir(FbMessagesArchive) if method.startswith('_') is False]:
+#    exec(f"print(FbMessagesArchive.{method}.__doc__)")

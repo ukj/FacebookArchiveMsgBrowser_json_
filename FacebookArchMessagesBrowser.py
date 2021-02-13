@@ -1,9 +1,10 @@
 # Facebooki arhiivi lehitseja
 # ukj@ukj.ee, 2021
 
+import os
 import tkinter as tk
 #from tkinter import font
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 #from tkinter.filedialog import asksaveasfile
 from tkinter.ttk import *
 import thirdparty.CreateToolTip
@@ -29,12 +30,11 @@ import webbrowser
 class AppHelpWindow(tk.Toplevel):
     '''Abiaken
     
-    *  https://www.geeksforgeeks.org/open-a-new-window-with-a-button-in-python-tkinter/
+    * https://www.geeksforgeeks.org/open-a-new-window-with-a-button-in-python-tkinter/
+    * https://www.askpython.com/python/examples/find-all-methods-of-class
     '''      
     def __init__(self, parent): 
         super().__init__(parent)
-        
-         
         text_title="Facebook Sõnumite JSON arhiiv zip"
         text = f"""
 \t{text_title}
@@ -61,7 +61,6 @@ Välju\t\tCtrl-Q
         h=int(self.winfo_height())
         w=int(self.winfo_width())
         self.geometry(f"{w}x{h}")
-        print (f"Abiakna suurus  {w}x{h}")
 
         
 
@@ -72,6 +71,8 @@ Välju\t\tCtrl-Q
 class App(tk.Tk):
     ''' Rakenduse peaaken'''
     yt=None
+    yt_cache = ''
+    yt_API_key = ''
     own_name='Nimi'
     fbmsg = FbMessagesArchive()
     msg_boxes = []
@@ -96,9 +97,6 @@ class App(tk.Tk):
         '''
         super().__init__()
         
-        self.yt = yt_basicMeta('AIzaSyC-rkBNmZ8kpH6N0Qfg-u1sDF3zdboMlZo')
-        self.yt.set_cache_file('yt_basicMeta.sqlite')
-      
         self.scw = self.sch = 700        
         self.title("Facebooki Sõnumite Arhiiv")
         self.resizable(True, True) #Mis suunal suurus muudetav X Y
@@ -131,7 +129,7 @@ class App(tk.Tk):
         #Nuppude loomine ja töövahendite järjestamine
         #
         self.create_AppButton(group_1, 'fileOpen', 'Ava',self.key_openfile, text_tooltip='Ava arhiiv zip', controlkey='<Control-o>')
-        self.create_AppButton(group_1, 'fileSave', 'Salv.CSV',self.key_savefile, text_tooltip='Salvesta filtreering tekstina', controlkey='<Control-s>')       
+        self.create_AppButton(group_1, 'fileSave', 'Salv\nCSV',self.key_savefile, text_tooltip='Salvesta filtreering tekstina', controlkey='<Control-s>')       
         self.create_AppButton(group_1, 'copyAll', 'Kopeeri',self.textbox_copy, text_tooltip='Kopeeri kogu see vestlus', controlkey='<Control-Alt-c>')
         #self.create_AppButton(group_1, 'clear', 'Tühj.',self.key_savefile, text_tooltip='Tühjenda', controlkey='<Control-e>')        
         self.listbox_Box.pack(side=tk.LEFT)
@@ -150,12 +148,24 @@ class App(tk.Tk):
         self.scw = self.winfo_width()
         self.sch = self.winfo_height()
         self.geometry(f"{self.scw}x{self.sch}")
-        print(f"peaakna suurus {self.scw}x{self.sch}")
         self.update()
         #self.mainloop()
-        myLogger('App.__init__()', " end") 
+        #myLogger('App.__init__()', " end") 
 
 
+
+    def set_yt_api_key(self, key):
+        '''       
+        Returns
+        -------
+        bool
+        '''
+        
+        if isinstance(key, str):
+            self.yt_API_key=key
+            return True
+        else:
+            return  False
 
     def create_AppButton(self, group, name, text,cmd,  text_tooltip='', controlkey=''):
         '''Nuppude tegija
@@ -167,8 +177,8 @@ class App(tk.Tk):
         * food = 'bread'; vars()[food] = 123; print bread  # --> 123
         * vars(self)['a'] = 10; print(self.a)
         '''
-        b = tk.Button(group, text=text, command=cmd, width=6)
-        b.config(width=3, height=2)
+        b = tk.Button(group, text=text, command=cmd, width=5)
+        b.config(width=5, height=2)
         
         if text_tooltip != '':
             if controlkey != '':
@@ -304,27 +314,34 @@ class App(tk.Tk):
     def key_openfile(self):
         '''
         * https://www.geeksforgeeks.org/python-askopenfile-function-in-tkinter/
+        * https://runestone.academy/runestone/books/published/thinkcspy/GUIandEventDrivenProgramming/02_standard_dialog_boxes.html
         '''
-        myLogger('open()', f" start") 
+        #myLogger('open()', f" start") 
         files = [('Zip Files', '*.zip')]
         file = filedialog.askopenfilename(filetypes = files, defaultextension = files)
-        print(1, file)
         try:
             isf = os.path.isfile(file)
         except:
             isf = False
             
         if isf:
-            print(2)
-            if self.fbmsg.set_ZipFp(file): 
-                print(3)
+            if self.fbmsg.set_ZipFp(file):
+                # skripti  kataloogis
+                #yt_cache_path = os.path.splitext(os.path.basename(file))[0]+'.yt.sqlite'
+                # Fb arhiivi kõrval
+                yt_cache_path = os.path.splitext(file)[0]+'.yt.sqlite'
+                messagebox.showinfo("Teave",f"""Youtubest teabe hankimine võib kaua aega võtta.
+Fb zip asukoht: {file}
+Fb sqlite asukoht: {yt_cache_path}
+""")
+                self.yt = yt_basicMeta(key=self.yt_API_key, cache=yt_cache_path)
                 self.listbox_Box.delete(0,tk.END)
                 self.listbox_Thread.delete(0,tk.END)
                            
                 self.msg_boxes = self.fbmsg.get_threadBoxes()
                 self.msg_convs = self.fbmsg.get_conversations('inbox')
                 
-                persons =   self.dict_keys(self.msg_convs)
+                persons = self.dict_keys(self.msg_convs)
                 p1 = persons[0]
                 thread = self.msg_convs[p1]
                 for element in self.msg_boxes:
@@ -347,8 +364,6 @@ class App(tk.Tk):
                 self.current_thread = p1
                 
                 self.textbox_clear()
-                self.T.insert(tk.END, f"\n Fb zip asukoht: {file}\n")
-                self.T.insert(tk.END, f"\n Kastid: {self.msg_boxes}\n\nThread {thread}\n\n Inimesed: {self.msg_convs}\n")
                 self.T.insert(tk.END, "\n".join(self.result))
             else:
                 self.result = []
@@ -386,4 +401,5 @@ class App(tk.Tk):
 
 if __name__ == "__main__":
     app = App()
+    app.set_yt_api_key('AIzaSyC-rkBNmZ8kpH6N0Qfg-u1sDF3zdboMlZo')
     app.mainloop()
