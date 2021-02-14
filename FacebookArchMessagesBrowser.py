@@ -3,6 +3,7 @@
 
 import os
 import tkinter as tk
+from tkinter.ttk import *
 #from tkinter import font
 from tkinter import filedialog, messagebox
 #from tkinter.filedialog import asksaveasfile
@@ -22,6 +23,12 @@ import webbrowser
 #import locale
 #import codecs
 #locale.getpreferredencoding()
+
+# TODO: select/add _filter(), execute_filter(); filtreering eraldi kogu
+
+filtreering = []
+filtreering.insert(id_in_result, [])
+filtreering[id_in_result].append({'tyyp','asi'})
 '''
 
 
@@ -32,13 +39,6 @@ class AppHelpWindow(tk.Toplevel):
     
     * https://www.geeksforgeeks.org/open-a-new-window-with-a-button-in-python-tkinter/
     * https://www.askpython.com/python/examples/find-all-methods-of-class
-    
-Ava zip\t\tCtrl-O
-Salv csv\t\tCtrl-S
-Kopeeri kõik\tCtrl-Alt-C
-See abi\t\tF1
-Välju\t\tCtrl-Q
-
     '''      
     def __init__(self, parent): 
         super().__init__(parent)
@@ -50,8 +50,15 @@ Välju\t\tCtrl-Q
 * Loeb zip faili ilma kõike lahti pakkimata
 * Filtreeritud teksti saab kopeerida lõikelauale või salvestada CSV
 * Näitab manuste failiteesid ja tekstis leiduvaid linke
-* Lisab Youtube JSON API-t kasutades video linkidele pealkirjad ja salvestab need SQLite abil.
+* Lisab Youtube JSON API-t kasutades video linkidele pealkirjad
+    ja salvestab need SQLite abil.
 
+\tKiirklahvid
+Ava zip\t\tCtrl-O
+Salv csv\t\tCtrl-S
+Kopeeri kõik\tCtrl-Alt-C
+See abi\t\tCtrl-H
+Välju\t\tCtrl-Q
 
 \tukj@ukj.ee, 2021.02"""
         
@@ -79,15 +86,17 @@ class App(tk.Tk):
     msg_boxes = []
     msg_convs = []
     result = []
-    current_box = current_thread = ''
+    current_box = ''
+    current_thread = ''
+    
     #root=None
+    frame=None
     T=None
     listbox_Box=None
     listbox_Thread=None
     appButtons = {}
-    csw = 700
-    csh = 700
-    frame=None
+    ctlrKeys = {}
+    csw = csh = 700
     
     def __init__(self):
         '''Peaaknaga alustamine
@@ -134,28 +143,30 @@ class App(tk.Tk):
         #
         #Nuppude loomine ja töövahendite järjestamine
         #
-        self.create_AppButton(group_1, 'fileOpen', 'Ava',self.key_openfile, text_tooltip='Ava arhiiv zip', controlkey='<Control-o>')
-        self.create_AppButton(group_1, 'fileSave', 'Salv\nCSV',self.key_savefile, text_tooltip='Salvesta filtreering tekstina', controlkey='<Control-s>')       
-        self.create_AppButton(group_1, 'copyAll', 'Kopeeri',self.textbox_copy, text_tooltip='Kopeeri kogu see vestlus', controlkey='<Control-Alt-c>')
-        #self.create_AppButton(group_1, 'clear', 'Tühj.',self.key_savefile, text_tooltip='Tühjenda', controlkey='<Control-e>')        
+        self.create_AppButton(group_1, 'fileOpen', 'Ava',self.key_openfile, text_tooltip='Ava arhiiv zip', controlkey='o') # keysym=o keycode=79 char='\x0f' 
+        self.create_AppButton(group_1, 'fileSave', 'Salv\nCSV',self.key_savefile, text_tooltip='Salvesta filtreering tekstina', controlkey='s') # keysym=s keycode=83 char='\x13'     
+        self.create_AppButton(group_1, 'copyAll', 'Kopeeri',self.textbox_copy, text_tooltip='Kopeeri kogu see vestlus', controlkey='c')# keysym=c keycode=67 char='\x03'
+        #self.create_AppButton(group_1, 'clear', 'Tühj.',self.key_savefile, text_tooltip='Tühjenda', controlkey='e')        
+
         self.listbox_Box.pack(side=tk.LEFT)
         listboxScroll_Box.pack(side = tk.LEFT, fill = tk.BOTH)
+
         self.listbox_Thread.pack(side=tk.LEFT)
         listboxScroll_Thread.pack(side = tk.LEFT, fill = tk.BOTH)
-        self.create_AppButton(group_1,'helpWin','[ ? ]',self.key_helpWindow, text_tooltip='Salvesta filtreering tekstina', controlkey='<F1>')
-        self.create_AppButton(group_1,'exitApp','[ X ]', self.key_exit, text_tooltip='Lõpeta', controlkey='<Control-Q>')
+
+        self.create_AppButton(group_1,'helpWin','?',self.key_helpWindow, text_tooltip='Salvesta filtreering tekstina', controlkey='h')#keysym=h keycode=72 char='\x08'
+        self.create_AppButton(group_1,'exitApp','X', self.key_exit, text_tooltip='Lõpeta', controlkey='q')#keysym=q keycode=81 char='\x11'
         group_1.pack()
 
         self.T.pack(expand=tk.YES, side=tk.LEFT, fill=tk.BOTH)
         S.pack(side=tk.RIGHT, fill=tk.Y)
         self.update()
-        
-        
         self.scw = self.winfo_width()
         self.sch = self.winfo_height()
         self.frame.config(width=self.scw, height=self.sch)
         self.geometry(f"{self.scw}x{self.sch}")
         self.update()
+        print(self.ctlrKeys)
         #self.mainloop()
         #myLogger('App.__init__()', " end") 
 
@@ -174,6 +185,14 @@ class App(tk.Tk):
         else:
             return  False
 
+    '''
+    filtreering = []
+    filtreering.insert(id_in_result, [])
+    filtreering[id_in_result].append({'tyyp','asi'})
+    '''
+
+    
+    
     def create_AppButton(self, group, name, text,cmd,  text_tooltip='', controlkey=''):
         '''Nuppude tegija
         
@@ -184,18 +203,29 @@ class App(tk.Tk):
         * food = 'bread'; vars()[food] = 123; print bread  # --> 123
         * vars(self)['a'] = 10; print(self.a)
         '''
-        b = tk.Button(group, text=text, command=cmd, width=5)
-        b.config(width=5, height=2)
+        bw =2
+        if "\n" in text:
+            bw=len(text.split("\n")[0])
+        else:
+            bw=len(text)
+        
+        b = tk.Button(group, text=text, padx=3, command=cmd, width=bw)
+        
         
         if text_tooltip != '':
             if controlkey != '':
-                text_tooltip +=  ' ' + controlkey.title() 
+                text_tooltip +=  ' Ctrl+' + controlkey.title() 
             thirdparty.CreateToolTip.CreateToolTip(self, b, text_tooltip)
         
         if controlkey != '':
-            self.frame.bind(controlkey, cmd)
-            #print(f"abc {controlkey} {cmd}")
+            self.ctlrKeys[controlkey] = cmd.__name__
+            
+            #self.frame.bind(controlkey, lambda x: cmd())
+            self.frame.bind_all( '<Control-'+controlkey+'>', self.ctrl_key)
+            print(f"bind {controlkey} {cmd.__name__}")
+
         b.pack(side=tk.LEFT)
+        b.config(width=bw, height=2)
         self.appButtons[name] = b
         self.update()
 
@@ -207,7 +237,36 @@ class App(tk.Tk):
         self.appButtons[name].configure(text=text)
 
 
+            
+    def ctrl_key(self, event):
+        '''
+        * https://stackoverflow.com/questions/19861689/check-if-modifier-key-is-pressed-in-tkinter#19863837
+        
+        mods = {
+            0x0001: 'Shift',
+            0x0002: 'Caps Lock',
+            0x0004: 'Control',
+            0x0008: 'Left-hand Alt',
+            0x0010: 'Num Lock',
+            0x0080: 'Right-hand Alt',
+            0x0100: 'Mouse button 1',
+            0x0200: 'Mouse button 2',
+            0x0400: 'Mouse button 3'
+        }
+        root.bind( '<Key>', lambda e: print( 'Key:', e.char,
+                                     'Mods:', mods.get( e.state, None )))
+        '''
+        print(event.state, event.keysym)
+        if event.state==4:
+            print("state=='Control'")
+            print(self.ctlrKeys[event.keysym])
+            if self.ctlrKeys[event.keysym] in dir(self):
+                print(self.ctlrKeys[event.keysym])
+                exec("self.%s()" % self.ctlrKeys[event.keysym]);
+        
 
+
+                            
     def dict_keys(self, d):
         ''' Get dict{} keys, returns list[] '''
         k = []
@@ -235,7 +294,7 @@ class App(tk.Tk):
         * https://stackoverflow.com/questions/64251762/python-tkinter-select-and-copy-all-text-contents-to-clipboard-on-button-clic
         * https://stackoverflow.com/questions/20611523/tkinter-text-widget-unselect-text
         '''
-        self.root.clipboard_clear()
+        self.clipboard_clear()
         self.T.focus()
         self.T.event_generate("<<TextModified>>")
         self.T.tag_add('sel', '1.0', 'end')   
