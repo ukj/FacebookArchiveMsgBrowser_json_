@@ -8,11 +8,13 @@ Facebook Sõnumite JSON arhiiv zip
 * * Vahemälu pannakse Arhiiviga samasse kausta ja sama nimega, erineva laiendiga
 * Kiirklahvid
 
+* Filtrid ja nende kuva on eraldi klassides
+* Tel Sõnade, numbrite ja meiliaadresside leidja
+
+
 ## Mis pooleli ja mis edasi
 
-- Filtrite valik, mõni põhi filter võib olla peamises  klassis, aga rohkemate lisamine vajab alamklsse/plugina liidest
-- Tel numbrite ja meiliaadresside leidja
-- - Nimed võivad sõnumites olla väikese algustähega ja raskemini leitavad, kuid sõnumikastidest vestluste osapoolte nimede kasutamised võiks leida. 
+- Nimed ja mainimiste leida.
 - Klikitav tabel, manuste lahtipakkija
 - exe failiks
 

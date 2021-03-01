@@ -37,8 +37,9 @@ tested with Python27 and Python34  by  vegaseat  09sep2014
     def enter(self, event=None):
         x = y = 0
         x, y, cx, cy = self.widget.bbox("insert")
+        sch = int(self.widget.winfo_height())
         x += self.widget.winfo_rootx() + 25
-        y += self.widget.winfo_rooty() + 20
+        y += self.widget.winfo_rooty() + sch
         # creates a toplevel window
         self.tw = tk.Toplevel(self.widget)
         # Leaves only the label and removes the app window
