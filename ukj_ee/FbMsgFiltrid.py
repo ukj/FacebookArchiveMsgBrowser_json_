@@ -71,29 +71,70 @@ class FbMsgF_YouTubeTitles():
 
 class FbMsgF_FindText():
     find_text_strv=None # = StringVar()
+    
+    part_sel_name=None # vormilt valitud nimi
+    participants=None # täidetakse init ajal
+    
     filter_sel_state=False
     
     def __init__(self):
-        self.find_text_strv = tk.StringVar( )
-        print('FbMsgF_FindText __init__()')
+        self.find_text_strv = tk.StringVar(value='')
+        self.part_sel_name = tk.StringVar(value='')
+        self.participants = []
+        #print('FbMsgF_FindText __init__()')
+
 
     def get_display_name(self):
         return 'FindText'
+
+    
+    def set_participants(self, p):
+        self.participants.append('')
+        for pp in p:
+            self.participants.append(pp)
+        print('FbMsgF_FindText.set_participants(): ', p, ' kokku: ', self.participants)
+
         
     def display(self, parent):
         #if self.find_text_strv == None:
         findgroup = tk.LabelFrame(parent, padx=15, pady=10, text=self.get_display_name())
+        
+        #sataja nime valik, +'kõik==None'
+        self.part_sel_name.set('') 
+        tk.Label(findgroup, text='Osalised:').pack(side=tk.LEFT)
+        opt = tk.OptionMenu( findgroup, self.part_sel_name, *self.participants)
+        opt.config(width=13, font=('Helvetica', 12))
+        opt.pack(side=tk.LEFT)
+        
+        #teksti otsing
         tk.Label(findgroup, text='Otsi:').pack(side=tk.LEFT)
         tk.Entry(findgroup, width=13, textvariable=self.find_text_strv).pack(side=tk.LEFT)
         return findgroup
+
     
     def is_set(self):
         self.filter_sel_state=len(self.find_text_strv.get()) > 0
         return self.filter_sel_state
+
+    
+    def message_time(self, timestamp):
+        ''' aja otsingut veel pole'''  
+        return True
+
+    
+    def sender_name(self, name):
+        ''' Kes kirjutas, tuleb sõnumist'''
+        if self.part_sel_name.get() == name:
+            return True
+        elif self.part_sel_name.get() == '':
+            return True
+        else:
+            return False
+ 
     
     def content(self, msg):
         ''' Kontrollib üksikut sõnumit'''
-        if self.find_text_strv==None or self.find_text_strv.get() == '':
+        if self.find_text_strv.get() == '':
             return True
         if self.find_text_strv.get() in msg:
             return True
@@ -116,8 +157,8 @@ class FbMsgF_GenFilteringType():
         
     def display(self, parent):  
         aagroup = tk.LabelFrame(parent, padx=15, pady=10, text=self.get_display_name())
-        tk.Radiobutton(aagroup, text="Kõik", variable=self.filter_type, value='All').pack(side=tk.LEFT)
-        tk.Radiobutton(aagroup, text="Ükski", variable=self.filter_type, value='Any').pack(side=tk.LEFT)
+        tk.Radiobutton(aagroup, text="Kõik, eraldamine", variable=self.filter_type, value='All').pack(side=tk.LEFT)
+        tk.Radiobutton(aagroup, text="Ükski, lisamine", variable=self.filter_type, value='Any').pack(side=tk.LEFT)
         return aagroup
     
     def is_set(self):
@@ -152,7 +193,7 @@ class FbMsgF_to_CSV():
     def get_csv(self, conv):
         # print('FbMsgF_to_CSV get_csv()')
         csv = ''
-        for row in conv:
+        for rowid,row in conv.items():
             csv += row[0] +';'+ row[1] +';'+ row[2] +';'
             if len(row[3]) > 0:
                 csv += 'Manused: \n'

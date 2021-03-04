@@ -396,7 +396,7 @@ class App(tk.Tk):
         self.filter_result = self.fbmsg.get_conversation_CSV() 
         self.T.delete('1.0',"end-1c")
         self.T.update()
-        self.T.insert(tk.END, f"\n Kirjakast: {self.current_box}\nVestlus: {self.current_thread}\n\n")
+        self.T.insert(tk.END, f"\nFail: {self.current_thread}\nPealkiri: {self.fbmsg.get_conv_meta_title()}\nOsalised: {self.fbmsg.get_conv_meta_participiants()}\n\n")
         self.T.insert(tk.END, "\n"+self.filter_result)
     
     

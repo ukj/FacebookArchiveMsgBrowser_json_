@@ -22,8 +22,11 @@ class FbMessagesArchive:
 
     Zip_f = ''  # failitee
     Zip_fp = None  # faili osuti
+    
+    MsgBoxes = []
+    this_MsgBox = ''
     Conversation = {}
-    Metainfo = {}
+    Metainfo =  {'msg_box':'', 'conv_id': '', 'host': '','title':'', 'participants': []}
 
     yt_cache_path = ''
     yt_api_key = ''
@@ -98,6 +101,7 @@ class FbMessagesArchive:
 
         if zipfile.is_zipfile(FbArchiveZip):
             #myLogger('set_ZipFp()', f"{FbArchiveZip}")
+            self.MsgBoxes = []
             for f in ZipFile(FbArchiveZip, 'r').namelist():
                 if f.startswith('messages/inbox/'):
                     self.Zip_f = FbArchiveZip
@@ -133,6 +137,7 @@ class FbMessagesArchive:
                     zinfo = self.Zip_fp.getinfo(f)
                     if(zinfo.is_dir()):
                         threads.append(f.split('/')[1])
+        self.MsgBoxes = threads
         return threads
 
     def get_conversations(self, box='inbox'):
@@ -156,8 +161,19 @@ class FbMessagesArchive:
                     zinfo = self.Zip_fp.getinfo(f)
                     if(zinfo.is_dir()):
                         conv[f.split('/')[2].split('_')[0]] = f.split('/')[2]
+        self.this_MsgBox = box
         return conv
 
+    
+    def get_conv_meta_participiants(self):
+        ''' vastluskaaslased 
+        returns:list vestluskaaslased'''
+        return self.Metainfo['participants']
+    
+    def get_conv_meta_title(self):
+        ''' vestluse pealkiri'''
+        return self.Metainfo['title']
+    
     def load_conversation(self, conv_id, own_name):
         '''
         Võtab ühe vestluse ja eraldab tekstist lingid/e-mailid/numbrid ja laiendab manuste jaotist
@@ -177,15 +193,15 @@ class FbMessagesArchive:
         list, [vestlus [int_timestamp_ms, str_sender_name, str_content, [attachments {type:content}, {type:content, title:title, thumbnail:uri}] ]]
         '''
         # print('load_conversation() ', conv_id)
-        self.Metainfo = {'conv_id': '', 'host': '', 'participants': []}
+        self.Metainfo = {'msg_box':'', 'conv_id': '', 'host': '','title':'', 'participants': []}
         self.Conversation = {}
-        ci = 0
+        ci = 0 # sõnumite loendur
         conversation_with_name = None
         self.Zip_fp = ZipFile(self.Zip_f, 'r')
         with self.Zip_fp as zipObj:
             listOfiles = zipObj.namelist()
             for fileName in listOfiles:
-                if fileName.endswith(".json") and fileName.startswith(f"messages/inbox/{conv_id}/message_"):
+                if fileName.endswith(".json") and fileName.startswith(f"messages/{self.this_MsgBox}/{conv_id}/message_"):
                     a_file = zipObj.read(fileName)
                     json_data = json.loads(
                         a_file, object_hook=self.fb_reEncode)
@@ -194,16 +210,20 @@ class FbMessagesArchive:
                         continue
 
                     participants = json_data["participants"]
-
+                    conv_title = json_data["title"]
                     for participant in participants:
                         if participant['name'] != own_name:
                             conversation_with_name = participant['name']
                         if conversation_with_name is None:
-                            conversation_with_name = conv_id
-                        self.Metainfo['participants'].append(
-                            conversation_with_name)
+                            conversation_with_name = conv_title
+                        
+                        # Et mitme faili pärast ei tekiks kordusi
+                        if conversation_with_name not in self.Metainfo['participants']:
+                            self.Metainfo['participants'].append(conversation_with_name)
+                    
                     self.Metainfo['conv_id'] = conv_id
                     self.Metainfo['host'] = own_name
+                    self.Metainfo['title'] = conv_title
 
                     for message in json_data["messages"]:
                         #print('load msg')
@@ -287,12 +307,12 @@ class FbMessagesArchive:
     # Saadaolevate filtrite nimed ja funktsioonid
     # TODO: Selle peaks täitma get_filter_names() või eraldi laadur
     conversation_filters = {'FbMsgF_GenFilteringType': ['general_filtering_type'],
-                            'FbMsgF_FindText': ['content'],
+                            'FbMsgF_FindText': ['content','message_time','sender_name'],
                             'FbMsgF_YouTubeTitles': ['attachments'],
                             'FbMsgF_to_CSV':['get_csv'] }
     # loodud filtrite objektid
     conversation_filters_active = {}
-    Conversation_Filtered = []
+    Conversation_Filtered = {}
 
     def get_filter_names(self):
         ''' TODO: Tulevikus peab kasutama getattr või importlib'''
@@ -300,12 +320,20 @@ class FbMessagesArchive:
         return self.conversation_filters.keys()
 
     def init_filters(self):
+        ''' iga init peab tegema filtri/plugina tüübile lubatud andmete
+        jagamised'''
         for n in self.conversation_filters.keys():
             # print('init_filters() init ', n)
             if n == 'FbMsgF_YouTubeTitles':
                 self.conversation_filters_active[n] = FbMsgF_YouTubeTitles(cache=self.yt_cache_path)
             elif n == 'FbMsgF_FindText':
                 self.conversation_filters_active[n] = FbMsgF_FindText()
+                for ftype in self.conversation_filters[n]:
+                    if ftype == 'sender_name':
+                        # TODO: Seda võin olla parem teha pärimisega
+                        #       enne peab tegema eraldi korraliku pärimise mudeli ja selle järgi kogu asja uuesti
+                        self.conversation_filters_active[n].set_participants(self.Metainfo['participants'] )
+                
             elif n == 'FbMsgF_GenFilteringType':
                 self.conversation_filters_active[n] = FbMsgF_GenFilteringType()
             elif n == 'FbMsgF_to_CSV':
@@ -327,7 +355,7 @@ class FbMessagesArchive:
             return self.Conversation
 
         # print( 'FbMsgF_YouTubeTitles.is_set()', self.conversation_filters_active['FbMsgF_YouTubeTitles'].is_set() )
-        self.Conversation_Filtered = []
+        self.Conversation_Filtered = {}
         # {vestlus 0:[0int_timestamp_ms, 1str_sender_name, 2str_content,
         #       3[attachments {type:content},
         #                    {type:content/uri/url, title:title, thumbnail:uri}]
@@ -335,10 +363,19 @@ class FbMessagesArchive:
         # }
         for i in range(len(self.Conversation)):
             results=[]
+            
+            
             Saatja = self.Conversation[i][1]
+            for fn, fo in self.conversation_filters_active.items():
+                if 'sender_name' in self.conversation_filters[fn]:
+                    results.append(fo.sender_name(Saatja))           
+            
+            
             Aeg = datetime.utcfromtimestamp(
                 int(self.Conversation[i][0]/1000)).strftime('%Y-%m-%d %H:%M:%S')
-            
+            for fn, fo in self.conversation_filters_active.items():
+                if 'message_time' in self.conversation_filters[fn]:
+                    results.append(fo.message_time(Aeg))  
             
             Sonum = self.Conversation[i][2]
             for fn, fo in self.conversation_filters_active.items():
@@ -361,7 +398,8 @@ class FbMessagesArchive:
             for fn, fo in self.conversation_filters_active.items():
                 if 'general_filtering_type' in self.conversation_filters[fn]:
                     if fo.general_filtering_type(results):
-                        self.Conversation_Filtered.append([Saatja, Aeg, Sonum, Manused])
+                        #self.Conversation_Filtered.append([Aeg, Saatja, Sonum, Manused]) #[]
+                        self.Conversation_Filtered[i] = [Aeg, Saatja, Sonum, Manused] #{}
 
 
     def get_conversation_CSV(self):
