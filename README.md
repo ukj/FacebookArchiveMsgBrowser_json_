@@ -1,4 +1,4 @@
-__Windowsi exe (PyInstaller) allalaadimis link:__ https://github.com/ukj/FacebookArchiveMsgBrowser_json_/releases/tag/v1.0
+__Windowsi exe (PyInstaller) allalaadimis link:__ https://github.com/ukj/FacebookArchiveMsgBrowser_json_/releases/tag/1.00001
 
 # FacebookArchiveMsgBrowser_json_
 Facebook Sõnumite JSON arhiiv zip
