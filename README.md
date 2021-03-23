@@ -27,4 +27,5 @@ Facebook Sõnumite JSON arhiiv zip
 - Nimed ja mainimiste leida.
 - Klikitav tabel, manuste lahtipakkijas
 
+<img style="vertical-align: top;" src='https://raw.githubusercontent.com/ukj/FacebookArchiveMsgBrowser_json_/master/my_turtle.png' />
 <img src='https://raw.githubusercontent.com/ukj/FacebookArchiveMsgBrowser_json_/master/Screenshot.jpg' />
