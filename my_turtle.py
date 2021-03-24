@@ -80,12 +80,12 @@ ruut(300, -150, -150, 'yellow')
     
 colors=['black', 'teal','cyan','orange','teal','cyan','orange','teal','cyan','orange','teal','cyan','orange','teal','cyan','orange','teal','cyan','orange','teal','cyan']
 
-a=[0,1,0,-2,-3,-1,0] #muudab kaldrea alguspunkti
-for x,iii in {1:5,2:7,3:8,4:7,5:4,6:1}.items(): #mitu risti real
+a=[0,1,0,-2,-3,-5,-6,-5] #muudab kaldrea alguspunkti
+for x,iii in {1:5,2:7,3:8,4:8,5:8,6:8,7:5}.items(): #mitu risti real
     ii=1
     while ii < iii:
         i = ii + a[x]
-        rist( (i*25)+50-(x*50), 350-(i*50)-(x*75),   25, colors[ii]) # *x25 *y50
+        rist( (i*25)+50-(x*25), 350-(i*50)-(x*75),   25, colors[ii]) # *x25 *y50
         ii += 1
 
 kuusnurk(120, tv='blue')
